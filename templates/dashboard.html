@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AutoTQ - Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Dashboard</h2>
+        <div id="user-info">
+            <!-- User information will be loaded here -->
+        </div>
+
+        <a href="/create-organization" class="btn btn-primary mb-2">Create Organization</a>
+        <a href="/create-device" class="btn btn-secondary mb-2">Create Device</a>
+        <a href="/create-firmware" class="btn btn-success mb-2">Create Firmware</a> 
+        <a href="/device-groups" class="btn btn-info mb-2">Manage Device Groups</a>
+        <a href="/logout" class="btn btn-danger">Logout</a>
+
+        <div class="mt-4">
+            <h4>Active Firmwares:</h4>
+            <div id="firmwares">
+                <!-- Firmwares will be loaded here -->
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h4>Your Organizations:</h4>
+            <div id="organizations">
+                <!-- Organizations will be loaded here -->
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h4>Active Devices:</h4>
+            <div id="devices">
+                <!-- Devices will be loaded here -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Fetch and display user information
+            fetch('/users/me', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token') 
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    console.error(response);
+                    // Handle unauthorized access
+                    alert('Unauthorized. Please log in.');
+                    window.location.href = '/login';
+                }
+            })
+            .then(user => {
+                $('#user-info').html(`
+                    <h3>Welcome, ${user.username}</h3>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Phone:</strong> ${user.phone_number}</p>
+                    <p><strong>First Name:</strong> ${user.first_name}</p>
+                    <p><strong>Last Name:</strong> ${user.last_name}</p>
+                    <p><strong>Address:</strong> ${user.address}</p>
+                `);
+            })
+            .catch(error => {
+                console.error('Error fetching user data:', error);
+            });
+
+            // Fetch and display firmwares
+            fetch('/firmware', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token') 
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    // Handle error
+                    alert('Error fetching firmwares. Please try again.');
+                }
+            })
+            .then(firmwares => {
+                let firmwareHtml = '';
+                firmwares.forEach(firmware => {
+                    firmwareHtml += `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">${firmware.version}</h5>
+                                <p class="card-text">Deployment Stage: ${firmware.deployment_stage}</p>
+                                <a href="/edit-firmware/${firmware.firmware_id}" class="btn btn-primary">Edit</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                $('#firmwares').html(firmwareHtml);
+            })
+            .catch(error => {
+                console.error('Error fetching firmwares:', error);
+            });
+
+            // Fetch and display organizations
+            fetch('/organizations', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token') 
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    // Handle error
+                    alert('Error fetching organizations. Please try again.');
+                }
+            })
+            .then(organizations => {
+                let orgHtml = '';
+                organizations.forEach(organization => {
+                    orgHtml += `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">${organization.name}</h5>
+                                <p class="card-text">Address: ${organization.address}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                $('#organizations').html(orgHtml);
+            })
+            .catch(error => {
+                console.error('Error fetching organizations:', error);
+            });
+
+            // Fetch and display active devices
+            fetch('/devices', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token') 
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    // Handle error
+                    alert('Error fetching devices. Please try again.');
+                }
+            })
+            .then(devices => {
+                let deviceHtml = '';
+                devices.forEach(device => {
+                    deviceHtml += `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">${device.human_readable_name}</h5>
+                                <p class="card-text">MAC Address: ${device.mac_address}</p>
+                                <p class="card-text">Serial Number: ${device.serial_number}</p>
+                                <a href="/autotq/${device.device_id}" class="btn btn-success">Open Tourniquet</a> 
+                            </div>
+                        </div>
+                    `;
+                });
+                $('#devices').html(deviceHtml);
+            })
+            .catch(error => {
+                console.error('Error fetching devices:', error);
+            });
+        });
+    </script>
+</body>
+</html>

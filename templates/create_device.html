@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AutoTQ - Create Device</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Create Device</h2>
+        <form method="POST" action="/create-device">
+            <div class="form-group">
+                <label for="mac_address">MAC Address:</label>
+                <input type="text" class="form-control" id="mac_address" name="mac_address" required>
+            </div>
+            <div class="form-group">
+                <label for="serial_number">Serial Number:</label>
+                <input type="text" class="form-control" id="serial_number" name="serial_number" required>
+            </div>
+            <div class="form-group">
+                <label for="human_readable_name">Human-Readable Name:</label>
+                <input type="text" class="form-control" id="human_readable_name" name="human_readable_name" required>
+            </div>
+            <div class="form-group">
+                <label for="device_group_id">Device Group:</label>
+                <select id="device_group_id" name="device_group_id">
+                    <option value="">Select Group</option>
+                    {% for group in device_group_options %}
+                        <option value="{{ group.group_id }}">{{ group.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" id="auto_update_enabled" name="auto_update_enabled">
+                <label class="form-check-label" for="auto_update_enabled">Enable Auto Updates</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

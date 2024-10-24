@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AutoTQ - Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">AutoTQ Details</h2>
+
+        <div id="device-info">
+            <!-- Device information will be loaded here -->
+        </div>
+
+        <a href="/dashboard" class="btn btn-secondary mb-2">Back to Dashboard</a>
+
+        <!-- Button to check for firmware update -->
+        <button id="check-firmware-update" class="btn btn-primary">Check for Firmware Update</button>
+
+        <!-- Download Firmware Button (Initially hidden) -->
+        <button id="download-firmware" class="btn btn-success mt-2" style="display: none;">Download Firmware</button>
+
+        <!-- Other controls for the AutoTQ (e.g., opening, closing) -->
+        <button class="btn btn-success">Open</button>
+        <button class="btn btn-danger">Close</button>
+    </div>
+
+    <script>
+        var device_data = {{ device_data | tojson }};
+        var firmware_id = null; // Store the firmware ID
+
+        $(document).ready(function() {
+            // Display device information
+            $('#device-info').html(`
+                <h3>${device_data.human_readable_name}</h3>
+                <p><strong>MAC Address:</strong> ${device_data.mac_address}</p>
+                <p><strong>Serial Number:</strong> ${device_data.serial_number}</p>
+            `);
+
+            // Handle firmware update check
+            $('#check-firmware-update').click(function() {
+                $.ajax({
+                    url: `/check-firmware-update/${device_data.device_id}`,
+                    type: 'GET',
+                    success: function(response) {
+                        if (response.needed) {
+                            firmware_id = response.firmware_data.firmware_id; // Store the firmware ID
+                            $('#device-info').append(`
+                                <div class="alert alert-info mt-3">
+                                    Firmware update available! Version: ${response.firmware_data.version}
+                                </div>
+                            `);
+                            $('#download-firmware').show();  // Show download button
+                        } else {
+                            $('#device-info').append(`
+                                <div class="alert alert-success mt-3">
+                                    No firmware update needed.
+                                </div>
+                            `);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $('#device-info').append(`
+                            <div class="alert alert-danger mt-3">
+                                Error checking firmware update: ${xhr.responseJSON?.error || 'Unknown error'}
+                            </div>
+                        `);
+                    }
+                });
+            });
+
+            // Handle firmware download (Updated to use firmware_id)
+            $('#download-firmware').click(function() {
+                // Construct the download URL
+                const downloadUrl = `/firmware/${firmware_id}/download`;
+
+                // Create an anchor element for the download
+                const anchor = document.createElement("a");
+                anchor.href = downloadUrl;
+                anchor.download = 'firmware.bin'; // Assuming a default filename
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+            });
+        });
+    </script>
+</body>
+</html>
